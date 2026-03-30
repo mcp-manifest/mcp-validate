@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-manifest.dev/schema/v0.1.json",
+  "title": "MCP Manifest",
+  "description": "Machine-readable manifest for MCP (Model Context Protocol) servers. Describes installation, configuration, and client wiring.",
+  "type": "object",
+  "required": ["version", "server", "install", "transport"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Spec version",
+      "enum": ["0.1"]
+    },
+    "server": {
+      "type": "object",
+      "description": "Server metadata",
+      "required": ["name", "displayName", "description", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique identifier, lowercase, hyphens allowed",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable name"
+        },
+        "description": {
+          "type": "string",
+          "description": "One-line description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Server version (semver)"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or organization"
+        },
+        "homepage": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to project homepage"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to source repository"
+        },
+        "license": {
+          "type": "string",
+          "description": "SPDX license identifier"
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Discovery tags"
+        }
+      },
+      "additionalProperties": false
+    },
+    "install": {
+      "type": "array",
+      "description": "Installation methods, ordered by priority (lower = preferred)",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["method", "package", "command"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["dotnet-tool", "npm", "pip", "cargo", "binary", "docker"],
+            "description": "Installation method"
+          },
+          "package": {
+            "type": "string",
+            "description": "Package name or image"
+          },
+          "source": {
+            "type": "string",
+            "description": "Custom registry URL"
+          },
+          "command": {
+            "type": "string",
+            "description": "CLI command name after installation"
+          },
+          "priority": {
+            "type": "integer",
+            "default": 0,
+            "description": "Lower = preferred"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "transport": {
+      "type": "string",
+      "enum": ["stdio", "sse", "streamable-http"],
+      "description": "How the client connects to this server"
+    },
+    "endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL for sse/streamable-http transports"
+    },
+    "config": {
+      "type": "array",
+      "description": "Configuration parameters the server accepts",
+      "items": {
+        "type": "object",
+        "required": ["key", "description", "type"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Parameter name"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this parameter does"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["string", "boolean", "number", "path", "url", "secret"],
+            "description": "Value type"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this parameter is required"
+          },
+          "default": {
+            "description": "Default value"
+          },
+          "env_var": {
+            "type": "string",
+            "description": "Environment variable name that supplies this value"
+          },
+          "arg": {
+            "type": "string",
+            "description": "CLI argument name (e.g. '--api-key')"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Human-readable prompt for interactive setup"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["global", "project", "both"]
+      },
+      "description": "Where this server is typically configured"
+    },
+    "settings_template": {
+      "type": "object",
+      "description": "Pre-built template for client MCP server configuration. Variables use ${key} syntax.",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
