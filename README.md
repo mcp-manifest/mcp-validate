@@ -2,9 +2,9 @@
 
 [![MCP Manifest](https://mcp-manifest.dev/media/mcp-manifest-badge-light.svg)](https://mcp-manifest.dev)
 
-Validate `mcp-manifest.json` files and test autodiscovery from domains.
+Validate `mcp-manifest.json` files, test autodiscovery from domains, and generate manifests from existing MCP server configs.
 
-## Usage
+## Validate
 
 ```bash
 # Validate a local manifest
@@ -75,6 +75,41 @@ const { manifest, source, errors } = await discover('ironlicensing.com');
 // Check if a command exists
 const exists = await checkCommand('ironlicensing-mcp');
 ```
+
+## Generate
+
+Create `mcp-manifest.json` from your existing Claude Code MCP server configs:
+
+```bash
+# List all configured MCP servers
+npx mcp-manifest-generate
+
+# Generate manifest for a specific server
+npx mcp-manifest-generate --server ironlicensing
+
+# Use a specific settings file
+npx mcp-manifest-generate --from-settings ~/.claude/settings.json --server myserver
+
+# Probe the server for name/version via MCP handshake
+npx mcp-manifest-generate --server ironlicensing --probe
+
+# Output to file
+npx mcp-manifest-generate --server ironlicensing -o mcp-manifest.json
+
+# Generate for all servers
+npx mcp-manifest-generate --all
+
+# Raw JSON (for piping)
+npx mcp-manifest-generate --server ironlicensing --json
+```
+
+The generator reverse-engineers your existing config:
+- **`--flag value`** args become typed config entries (`--api-key` → type: `secret`)
+- **Environment variables** become config entries with `env_var` field
+- **Command patterns** infer install method (`npx` → npm, `uvx` → pip, `.exe` → dotnet-tool)
+- **`--probe`** runs an MCP initialize handshake to get the real server name and version
+
+Review the generated manifest, fill in the `TODO` description, and commit.
 
 ## License
 

@@ -42,6 +42,13 @@ export function validateManifest(manifest) {
     if (dupes.length > 0) {
       errors.push(`duplicate config keys: ${[...new Set(dupes)].join(', ')}`);
     }
+
+    // Validate options and options_from aren't both set
+    for (const cfg of manifest.config) {
+      if (cfg.options && cfg.options_from) {
+        errors.push(`config "${cfg.key}": cannot have both "options" and "options_from"`);
+      }
+    }
   }
 
   if (manifest.settings_template) {
@@ -66,7 +73,17 @@ export function validateManifest(manifest) {
 export async function discover(input) {
   const errors = [];
 
-  // 1. Local file
+  // 1. Installed tool: try {command} --manifest
+  if (!input.startsWith('http') && !input.startsWith('/') && !input.includes('\\') && !input.endsWith('.json')) {
+    try {
+      const manifest = await tryCommandManifest(input);
+      if (manifest) {
+        return { manifest, source: `command: ${input} --manifest`, errors: [] };
+      }
+    } catch { /* not an installed command */ }
+  }
+
+  // 2. Local file path
   try {
     const { existsSync, readFileSync: readSync } = await import('fs');
     if (existsSync(input)) {
@@ -79,7 +96,7 @@ export async function discover(input) {
     }
   } catch { /* not a file path */ }
 
-  // 2. Direct URL to .json
+  // 3. Direct URL to .json
   if (input.startsWith('http') && input.endsWith('.json')) {
     try {
       const res = await fetch(input, { signal: AbortSignal.timeout(10000) });
@@ -94,12 +111,12 @@ export async function discover(input) {
     return { manifest: null, source: input, errors };
   }
 
-  // 3. Normalize to base URL
+  // 4. Normalize to base URL
   let baseUrl = input;
   if (!baseUrl.startsWith('http')) baseUrl = `https://${baseUrl}`;
   baseUrl = baseUrl.replace(/\/+$/, '');
 
-  // 4. Try well-known URL
+  // 5. Try well-known URL
   const wellKnown = `${baseUrl}/.well-known/mcp-manifest.json`;
   try {
     const res = await fetch(wellKnown, { signal: AbortSignal.timeout(10000) });
@@ -112,7 +129,7 @@ export async function discover(input) {
     errors.push(`well-known: ${e.message}`);
   }
 
-  // 5. Fetch HTML and parse <link rel="mcp-manifest">
+  // 6. Fetch HTML and parse <link rel="mcp-manifest">
   try {
     const res = await fetch(baseUrl, { signal: AbortSignal.timeout(10000) });
     if (res.ok) {
@@ -144,6 +161,31 @@ export async function discover(input) {
   }
 
   return { manifest: null, source: baseUrl, errors };
+}
+
+/**
+ * Try running {command} --manifest and parse the output as a manifest.
+ * @param {string} command
+ * @returns {Promise<object|null>}
+ */
+async function tryCommandManifest(command) {
+  const { exec } = await import('child_process');
+  const { promisify } = await import('util');
+  const execAsync = promisify(exec);
+
+  try {
+    const cmd = process.platform === 'win32' ? command.replace(/\.exe$/, '') : command;
+    const { stdout, stderr } = await execAsync(`${cmd} --manifest`, { timeout: 10000 });
+
+    if (!stdout || !stdout.trim()) return null;
+
+    const manifest = JSON.parse(stdout.trim());
+    // Basic sanity check — must have server.name
+    if (manifest?.server?.name) return manifest;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**

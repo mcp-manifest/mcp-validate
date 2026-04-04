@@ -55,6 +55,11 @@
           "type": "string",
           "description": "SPDX license identifier"
         },
+        "icon": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the server's icon (square, PNG or SVG recommended). Clients SHOULD fall back to a default MCP icon when absent."
+        },
         "keywords": {
           "type": "array",
           "items": { "type": "string" },
@@ -146,6 +151,27 @@
           "prompt": {
             "type": "string",
             "description": "Human-readable prompt for interactive setup"
+          },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Static list of valid values. Clients SHOULD render as a dropdown."
+          },
+          "options_from": {
+            "type": "object",
+            "description": "Dynamically resolve available values from a local file.",
+            "required": ["file", "path"],
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Path to a local JSON file. ~ is expanded to the user's home directory."
+              },
+              "path": {
+                "type": "string",
+                "description": "JSONPath expression to extract values from the file."
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false

@@ -4,11 +4,13 @@
   "description": "Validate mcp-manifest.json files and test autodiscovery from domains",
   "type": "module",
   "bin": {
-    "mcp-manifest-validate": "./bin/cli.js"
+    "mcp-manifest-validate": "./bin/cli.js",
+    "mcp-manifest-generate": "./bin/generate.js"
   },
   "main": "./src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./generate": "./src/generate.js"
   },
   "files": [
     "bin/",
