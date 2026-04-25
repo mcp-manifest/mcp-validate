@@ -113,4 +113,4 @@ Review the generated manifest, fill in the `TODO` description, and commit.
 
 ## License
 
-CC0 1.0 — Public domain.
+Apache-2.0 — see [LICENSE](LICENSE) for the full license text and [NOTICE](NOTICE) for attribution.
