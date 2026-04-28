@@ -35,7 +35,7 @@
   "homepage": "https://mcp-manifest.dev",
   "repository": {
     "type": "git",
-    "url": "https://git.marketally.com/mcp-manifest/validate"
+    "url": "https://github.com/mcp-manifest/mcp-validate"
   },
   "dependencies": {
     "ajv": "^8.17.0",
